@@ -59,17 +59,63 @@ tRef.once("value").then(snapshot => {
     document.getElementById("biddingControls").classList.remove("hidden");
 
     document.getElementById("goToBiddingBtn").onclick = () => {
-      location.href = "bidding.html?tournamentname="+tournamentName;
+      location.href = "/tournament/bidding/bidding.html?tournamentname=" + tournamentName;
     };
 
     if (creator === playerName) {
       document.getElementById("stopBiddingBtn").classList.remove("hidden");
 
       document.getElementById("stopBiddingBtn").onclick = async () => {
-        await tRef.child("season" + seasonNo).set({
-          users: JSON.parse(JSON.stringify(data.users)),
-          schedule: {}
+        const usersObj = JSON.parse(JSON.stringify(data.users));
+        const teamNames = Object.keys(usersObj);
+
+        // 1️⃣ pehle matches array banao
+        let matches = [];
+
+        for (let i = 0; i < teamNames.length; i++) {
+          for (let j = i + 1; j < teamNames.length; j++) {
+
+            matches.push({
+              type: "league",
+              user1: teamNames[i],
+              user2: teamNames[j],
+              home: teamNames[i],
+              away: teamNames[j],
+              played: false,
+              result: null
+            });
+
+            matches.push({
+              type: "league",
+              user1: teamNames[j],
+              user2: teamNames[i],
+              home: teamNames[j],
+              away: teamNames[i],
+              played: false,
+              result: null
+            });
+
+          }
+        }
+
+        // 2️⃣ shuffle matches (Fisher–Yates)
+        for (let i = matches.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+  [matches[i], matches[j]] = [matches[j], matches[i]];
+        }
+
+        // 3️⃣ wapas object bana do
+        const schedule = {};
+        matches.forEach((m, idx) => {
+          schedule["match_" + (idx + 1)] = m;
         });
+
+        // 4️⃣ firebase write
+        await tRef.child("season" + seasonNo).set({
+          users: usersObj,
+          schedule: schedule
+        });
+
 
         await tRef.update({ status: "playing" + seasonNo });
         location.reload();
@@ -117,11 +163,26 @@ tRef.once("value").then(snapshot => {
     });
 
     /* NEXT MATCH (placeholder) */
-    const userA = "userA";
-    const userB = "userB";
+    const seasonData = data["season" + seasonNo];
+    const schedule = seasonData?.schedule || {};
 
-    document.getElementById("nextMatch").innerText =
-      `Next match between "${userA}" and "${userB}"`;
+    // next unplayed match pick
+    const nextMatchEntry = Object.values(schedule).find(m => m.played === false);
+
+    let nextMatchText = "No upcoming matches";
+
+    if (nextMatchEntry) {
+      if (nextMatchEntry.type === "league") {
+        nextMatchText =
+          `Next match (League): ${nextMatchEntry.user1} vs ${nextMatchEntry.user2}
+Home: ${nextMatchEntry.home}`;
+      } else if (nextMatchEntry.type === "knockout") {
+        nextMatchText =
+          `Next match (${nextMatchEntry.round.toUpperCase()}): ${nextMatchEntry.user1} vs ${nextMatchEntry.user2}`;
+      }
+    }
+
+    document.getElementById("nextMatch").innerText = nextMatchText;
 
     const btn = document.getElementById("playWatchBtn");
     btn.innerText =
