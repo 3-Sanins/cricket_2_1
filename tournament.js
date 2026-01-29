@@ -54,7 +54,7 @@ function loadTournaments() {
 
                     card.onclick = () => {
                         localStorage.setItem("currentTournament", t.key);
-                        window.location.href='tournaments.html?tournamentname=fpl'
+                        window.location.href="tournaments.html?tournamentname="+currentTournament;
                         // future navigation
                     };
 
