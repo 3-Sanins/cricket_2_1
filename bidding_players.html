@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Global Players</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: #fff;
+  margin: 0;
+  padding: 20px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+button {
+  background: #22c55e;
+  border: none;
+  padding: 10px 16px;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+#playersList {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.player {
+  background: #1e293b;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.player:hover {
+  background: #334155;
+}
+
+/* Popup */
+#popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+#card {
+  background: #020617;
+  width: 320px;
+  padding: 18px;
+  border-radius: 10px;
+}
+
+#card h3 {
+  margin-top: 0;
+}
+
+input, select {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 6px;
+  border-radius: 5px;
+  border: none;
+}
+
+.hidden {
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>Global Players</h2>
+  <button onclick="openCreate()">Create Player</button>
+</header>
+
+<div id="playersList"></div>
+
+<!-- Popup -->
+<div id="popup">
+  <div id="card">
+    <h3 id="popupTitle"></h3>
+
+    <input id="name" placeholder="Name">
+    <input id="bat" type="number" placeholder="Batting Rating">
+    <input id="bowl" type="number" placeholder="Bowling Rating">
+    <input id="price" type="number" placeholder="Price">
+
+    <select id="type">
+      <option value="batter">Batter</option>
+      <option value="bowler">Bowler</option>
+      <option value="allrounder">All Rounder</option>
+    </select>
+
+    <input id="strengths" placeholder="Strengths (comma separated)">
+    <input id="weakness" placeholder="Weakness (comma separated)">
+
+    <button id="editBtn" onclick="enableEdit()">Edit</button>
+    <button id="saveBtn" class="hidden" onclick="savePlayer()">Save</button>
+    <button style="margin-top:6px;background:#ef4444" onclick="closePopup()">Close</button>
+  </div>
+</div>
+
+<script>
+/* Firebase config */
+const firebaseConfig = {
+  apiKey: "AIzaSyClRQbU3N7F2F9Pp6BYirjcQxZEyVuxcXo",
+  authDomain: "cric-283bd.firebaseapp.com",
+  databaseURL: "https://cric-283bd-default-rtdb.firebaseio.com",
+  projectId: "cric-283bd",
+  storageBucket: "cric-283bd.firebasestorage.app",
+  messagingSenderId: "509305000521",
+  appId: "1:509305000521:web:2c16c4f7d2e85f98476598"
+};
+
+const name = document.getElementById("name");
+const bat = document.getElementById("bat");
+const bowl = document.getElementById("bowl");
+const price = document.getElementById("price");
+const type = document.getElementById("type");
+const strengths = document.getElementById("strengths");
+const weakness = document.getElementById("weakness");
+
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let currentId = null;
+let mode = "view";
+
+function loadPlayers() {
+  db.ref("bidding_players_data").on("value", snap => {
+    const list = document.getElementById("playersList");
+    list.innerHTML = "";
+
+    let players = [];
+
+    snap.forEach(child => {
+      players.push({
+        id: child.key,
+        ...child.val()
+      });
+    });
+
+    players.sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+
+    players.forEach(p => {
+      const div = document.createElement("div");
+      div.className = "player";
+      div.innerText = p.name;
+      div.onclick = () => openView(p.id, p);
+      list.appendChild(div);
+    });
+  });
+}
+
+function openView(id, data) {
+  currentId = id;
+  mode = "view";
+  fillForm(data);
+  setReadonly(true);
+  document.getElementById("popupTitle").innerText = data.name;
+  document.getElementById("editBtn").classList.remove("hidden");
+  document.getElementById("saveBtn").classList.add("hidden");
+  document.getElementById("popup").style.display = "flex";
+}
+
+function openCreate() {
+  currentId = null;
+  mode = "create";
+  clearForm();
+  setReadonly(false);
+  document.getElementById("popupTitle").innerText = "Create Player";
+  document.getElementById("editBtn").classList.add("hidden");
+  document.getElementById("saveBtn").classList.remove("hidden");
+  document.getElementById("popup").style.display = "flex";
+}
+
+function enableEdit() {
+  mode = "edit";
+  setReadonly(false);
+  document.getElementById("saveBtn").classList.remove("hidden");
+}
+
+function savePlayer() {
+  const obj = {
+    name: name.value.trim(),
+    battingRating: Number(bat.value),
+    bowlingRating: Number(bowl.value),
+    price: Number(price.value),
+    type: type.value,
+    bidder: "None",
+
+    strengths: strengths.value
+      ? strengths.value.split(",").map(s => s.trim()).filter(Boolean)
+      : [],
+
+    weakness: weakness.value
+      ? weakness.value.split(",").map(w => w.trim()).filter(Boolean)
+      : []
+  };
+
+  if (mode === "create") {
+    db.ref("bidding_players_data").push(obj);
+  } else {
+    db.ref("bidding_players_data/" + currentId).update(obj);
+  }
+
+  closePopup();
+}
+
+function fillForm(d) {
+  name.value = d.name || "";
+  bat.value = d.battingRating ?? "";
+  bowl.value = d.bowlingRating ?? "";
+  price.value = d.price ?? "";
+  type.value = d.type || "batter";
+
+  strengths.value = Array.isArray(d.strengths)
+    ? d.strengths.join(", ")
+    : "";
+
+  weakness.value = Array.isArray(d.weakness)
+    ? d.weakness.join(", ")
+    : "";
+}
+
+function clearForm() {
+  document.querySelectorAll("input").forEach(i => i.value = "");
+}
+
+function setReadonly(val) {
+  document.querySelectorAll("input,select").forEach(i => i.disabled = val);
+}
+
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
+}
+
+loadPlayers();
+</script>
+
+</body>
+</html>

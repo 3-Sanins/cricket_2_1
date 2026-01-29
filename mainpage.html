@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket Clash - Strategy Arena</title>
+    <style>
+        :root {
+            --bg-color: #0f1214;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border-default: rgba(255, 255, 255, 0.1);
+            --border-active: #4caf50;
+            --text-main: #ffffff;
+            --text-muted: #717171;
+            --accent-blue: #3498db;
+            --accent-green: #2ecc71;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #1a1f24 0%, #0a0c0d 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .logo {
+            font-size: clamp(2.5rem, 8vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .logo span:first-child {
+            background: linear-gradient(to right, #3ab5f0, #3498db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo span:last-child {
+            background: linear-gradient(to right, #2ecc71, #a8e063);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+        }
+
+        /* Card Grid */
+		.card-container {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 20px;
+		}
+
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-default);
+            border-radius: 15px;
+            padding: 50px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        /* Hover & Active States */
+        .card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-8px);
+        }
+
+        .card.active {
+            border-color: var(--border-active);
+            background: rgba(76, 175, 80, 0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Icons */
+        .icon {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+
+		.card .icon svg {
+    width: 45px;
+    height: 45px;
+    stroke: var(--accent-blue);
+}
+
+
+
+        .card h2 {
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Bottom Logo */
+        .footer-logo {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 35px;
+            height: 35px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            opacity: 0.7;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 600px) {
+            .card-container {
+                grid-template-columns: 1fr;
+            }
+            .header { margin-bottom: 30px; }
+        }
+		
+		/* Navigation Buttons in Top Left */
+.nav-controls {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 12px;
+    z-index: 100;
+}
+
+.nav-btn {
+    width: 45px;
+    height: 45px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-main);
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+}
+
+.nav-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke: var(--text-main);
+}
+
+/* Ensure header doesn't overlap on small screens */
+@media (max-width: 768px) {
+    .nav-controls {
+        position: relative;
+        top: 0;
+        left: 0;
+        margin-bottom: 20px;
+        justify-content: center;
+    }
+}
+
+.nav-btn {
+    color: var(--accent-blue);
+}
+
+
+.nav-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor; /* ✅ */
+}
+
+
+.nav-btn:hover svg {
+    stroke: var(--accent-green);
+}
+
+
+.nav-btn:hover svg {
+    stroke: var(--accent-green);
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="nav-controls">
+        <div class="nav-btn" title="Profile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>
+        <div class="nav-btn" title="Shop">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+        </div>
+        <div class="nav-btn" title="Help">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </div>
+    </div>
+	
+<div class="header">
+        <h1 class="logo"><span>Cricket</span> <span>Clash</span></h1>
+        <p class="subtitle">Strategy Arena</p>
+    </div>
+
+    <div class="card-container">
+        <div class="card active" onclick="selectCard(this)">
+            <div class="icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <h2>Single Player</h2>
+            <p>VS Computer</p>
+        </div>
+        
+        <div class="card" onclick="selectCard(this)">
+    <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="14.5" y1="9.5" x2="19.5" y2="4.5"></line>
+                <line x1="4.5" y1="19.5" x2="9.5" y2="14.5"></line>
+                <line x1="4.5" y1="4.5" x2="19.5" y2="19.5"></line>
+                <line x1="18.5" y1="13.5" x2="20" y2="15"></line>
+                <line x1="9" y1="4" x2="10.5" y2="5.5"></line>
+            </svg>
+        </div>
+        <h2>1v1 Battle</h2>
+        <p>Private Challenge</p>
+    </div>
+
+        <div class="card" onclick="selectCard(this)">
+            <div class="icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <h2>Multiplayer</h2>
+            <p>Online Match</p>
+        </div>
+
+        <div class="card" onclick="selectCard(this)">
+            <div class="icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3h15"></path><path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"></path><path d="M6 14h12"></path></svg>
+            </div>
+            <h2>Practice / Simulation</h2>
+            <p>Test your strategies</p>
+        </div>
+    </div>
+
+    <div class="footer-logo">N</div>
+
+    <script>
+        function selectCard(element) {
+            // Remove 'active' class from all cards
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => card.classList.remove('active'));
+            
+            // Add 'active' class to the clicked card
+            element.classList.add('active');
+            
+            // Logic for what happens when a button is clicked
+            console.log("Selected Mode:", element.querySelector('h2').innerText);
+        }
+    </script>
+
+</body>
+</html>

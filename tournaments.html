@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Tournament</title>
+  <link rel="stylesheet" href="tournaments.css">
+
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+
+<body>
+
+  <h1 id="tournamentTitle"></h1>
+
+  <div id="message" class="hidden"></div>
+
+  <div id="creatorControls" class="hidden">
+    <p id="userCount"></p>
+    <button id="startBiddingBtn">Start this Season with the Bidding</button>
+  </div>
+
+  <div id="biddingControls" class="hidden">
+    <button id="goToBiddingBtn">Go to Bidding</button>
+    <button id="stopBiddingBtn" class="hidden">Stop the Bidding</button>
+  </div>
+
+  <div id="playingSection" class="hidden">
+    <h2>Points Table</h2>
+
+    <table id="pointsTable">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Played</th>
+          <th>Won</th>
+          <th>Draw</th>
+          <th>Lost</th>
+          <th>Points</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div id="nextMatch"></div>
+    <button id="playWatchBtn"></button>
+  </div>
+
+  <script src="tournaments.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket Bidding Game</title>
+    <link rel="stylesheet" href="bidding.css">
+</head>
+<body>
+    <div id="app">
+        <h1>Cricket Player Bidding</h1>
+        <div id="user-info">
+            <div id="user-money">Money: Loading...</div>
+            <div id="user-players">Players Owned: Loading...</div>
+        </div>
+        <div id="player-card">
+            <div id="player-details">
+                <h2 id="player-name">Loading...</h2>
+                <p id="player-type">Type: Loading...</p>
+                <p id="player-batting">Batting Rating: Loading...</p>
+                <p id="player-bowling">Bowling Rating: Loading...</p>
+                <p id="player-skills">Skills: Loading...</p>
+                <p id="player-bidder">Bidder: Loading...</p>
+                <p id="player-weakness"></p>
+
+            </div>
+            <div id="player-price">Price: Loading...</div>
+            <div id="buttons">
+                <button id="take-btn">Take</button>
+                <button id="leave-btn">Leave</button>
+                <button id="refresh-btn">Refresh</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs via script tags -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="bidding.js"></script>
+</body>
+</html>

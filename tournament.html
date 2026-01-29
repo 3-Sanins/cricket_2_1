@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cricket Clash – Tournaments</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="tournament.css">
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="header">
+    <h1 class="logo"><span>Cricket</span> <span>Clash</span></h1>
+    <p class="subtitle">Your Tournaments</p>
+</div>
+
+<div class="card-container" id="tournamentList">
+    <!-- tournament buttons injected here -->
+</div>
+
+<!-- Bottom Controls -->
+<div class="bottom-controls">
+    <button class="action-btn left" onclick="openJoin()">Join</button>
+    <button class="action-btn right" onclick="openCreate()">Create</button>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modal">
+    <div class="modal-card">
+        <h2 id="modalTitle"></h2>
+
+        <input id="tName" placeholder="Tournament Name">
+        <input id="tPass" placeholder="Password">
+        <input id="tMoney" placeholder="Money (only for Create)" type="number">
+
+        <div class="modal-actions">
+            <button onclick="closeModal()">Cancel</button>
+            <button onclick="submitModal()">Submit</button>
+        </div>
+    </div>
+</div>
+
+<script src="tournament.js"></script>
+</body>
+</html>
