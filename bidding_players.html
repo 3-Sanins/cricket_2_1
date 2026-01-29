@@ -84,6 +84,47 @@ input, select {
 .hidden {
   display: none;
 }
+.radio-group {
+  margin-bottom: 14px;
+}
+
+.radio-title {
+  font-weight: bold;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #e5e7eb;
+}
+
+.radio-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1e293b;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.radio-item input[type="radio"] {
+  accent-color: #22c55e;
+  transform: scale(1.1);
+}
+
+/* Desktop improvements */
+@media (min-width: 640px) {
+  .radio-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+  }
+
+  .radio-title {
+    grid-column: 1 / -1;
+  }
+}
+
 </style>
 </head>
 
@@ -106,11 +147,45 @@ input, select {
     <input id="bowl" type="number" placeholder="Bowling Rating">
     <input id="price" type="number" placeholder="Price">
 
-    <select id="type">
-      <option value="batter">Batter</option>
-      <option value="bowler">Bowler</option>
-      <option value="allrounder">All Rounder</option>
-    </select>
+<div class="radio-group">
+  <p class="radio-title">Batter</p>
+  <label class="radio-item">
+    <input type="radio" name="batterHand" value="left hand batter">
+    <span>Left Hand</span>
+  </label>
+  <label class="radio-item">
+    <input type="radio" name="batterHand" value="right hand batter">
+    <span>Right Hand</span>
+  </label>
+</div>
+
+<div class="radio-group">
+  <p class="radio-title">Bowler</p>
+  <label class="radio-item">
+    <input type="radio" name="bowlerHand" value="left hand bowler">
+    <span>Left Hand</span>
+  </label>
+  <label class="radio-item">
+    <input type="radio" name="bowlerHand" value="right hand bowler">
+    <span>Right Hand</span>
+  </label>
+</div>
+
+<div class="radio-group">
+  <p class="radio-title">Bowling Type</p>
+  <label class="radio-item">
+    <input type="radio" name="bowlingType" value="spin">
+    <span>Spin</span>
+  </label>
+  <label class="radio-item">
+    <input type="radio" name="bowlingType" value="pace">
+    <span>Pace</span>
+  </label>
+  <label class="radio-item">
+    <input type="radio" name="bowlingType" value="none">
+    <span>None</span>
+  </label>
+</div>
 
     <input id="strengths" placeholder="Strengths (comma separated)">
     <input id="weakness" placeholder="Weakness (comma separated)">
@@ -132,6 +207,12 @@ const firebaseConfig = {
   messagingSenderId: "509305000521",
   appId: "1:509305000521:web:2c16c4f7d2e85f98476598"
 };
+
+function getRadioValue(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : "";
+}
+
 
 const name = document.getElementById("name");
 const bat = document.getElementById("bat");
@@ -205,13 +286,22 @@ function enableEdit() {
 }
 
 function savePlayer() {
+
+  const batter = getRadioValue("batterHand");
+  const bowler = getRadioValue("bowlerHand");
+  const bowlType = getRadioValue("bowlingType");
+
+  const typeString = [batter, bowler, bowlType]
+    .filter(Boolean)
+    .join(",");
+
   const obj = {
     name: name.value.trim(),
     battingRating: Number(bat.value),
     bowlingRating: Number(bowl.value),
     price: Number(price.value),
-    type: type.value,
     bidder: "None",
+    type: typeString,
 
     strengths: strengths.value
       ? strengths.value.split(",").map(s => s.trim()).filter(Boolean)
@@ -232,19 +322,37 @@ function savePlayer() {
 }
 
 function fillForm(d) {
-  name.value = d.name || "";
-  bat.value = d.battingRating ?? "";
-  bowl.value = d.bowlingRating ?? "";
-  price.value = d.price ?? "";
-  type.value = d.type || "batter";
+  // Basic fields
+  name.value = d?.name ?? "";
+  bat.value = d?.battingRating ?? "";
+  bowl.value = d?.bowlingRating ?? "";
+  price.value = d?.price ?? "";
 
-  strengths.value = Array.isArray(d.strengths)
+  // Strengths / Weakness (array safe)
+  strengths.value = Array.isArray(d?.strengths)
     ? d.strengths.join(", ")
     : "";
 
-  weakness.value = Array.isArray(d.weakness)
+  weakness.value = Array.isArray(d?.weakness)
     ? d.weakness.join(", ")
     : "";
+
+  // ---- Radio buttons handling ----
+
+  // Clear all radios first
+  document
+    .querySelectorAll('input[type="radio"]')
+    .forEach(r => r.checked = false);
+
+  // Set radios from stored type string
+  if (typeof d?.type === "string" && d.type.length > 0) {
+    d.type.split(",").forEach(val => {
+      const radio = document.querySelector(
+        `input[type="radio"][value="${val.trim()}"]`
+      );
+      if (radio) radio.checked = true;
+    });
+  }
 }
 
 function clearForm() {
