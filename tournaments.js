@@ -59,7 +59,7 @@ tRef.once("value").then(snapshot => {
     document.getElementById("biddingControls").classList.remove("hidden");
 
     document.getElementById("goToBiddingBtn").onclick = () => {
-      location.href = "/tournament/bidding/bidding.html?tournamentname=" + tournamentName;
+      location.href = "bidding.html?tournamentname=" + tournamentName;
     };
 
     if (creator === playerName) {
