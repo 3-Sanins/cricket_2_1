@@ -8,240 +8,367 @@ const firebaseConfig = {
   appId: "1:509305000521:web:2c16c4f7d2e85f98476598"
 };
 
-
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// ---------------- TOURNAMENT ----------------
-
-function getTournamentNameFromURL() {
+const currentTournament = (() => {
   const params = new URLSearchParams(window.location.search);
   for (const [k, v] of params.entries()) {
     if (k.toLowerCase() === "tournamentname") return v;
   }
-  return null;
-}
-
-const currentTournament = getTournamentNameFromURL();
-if (!currentTournament) {
   alert("Tournament name missing");
   throw new Error("Tournament missing");
-}
+})();
 
-// ---------------- USER ----------------
+const currentUser = (() => {
+  const user = localStorage.getItem("playerName");
+  if (!user) {
+    alert("Please log in first.");
+    throw new Error("User not authenticated");
+  }
+  return user;
+})();
 
-let currentUser = localStorage.getItem("playerName");
-
-// ---------------- GLOBAL ----------------
-
-let players = [];          // array of player objects
-let playerKeys = [];       // matching firebase keys
+let players = [];
+let playerKeys = [];
 let currentPlayerIndex = 0;
+let currentPlayerKey = null;
 let userData = {};
+let playersListener = null;
+let userListener = null;
 
-// ---------------- FETCH ----------------
+const alertManager = {
+  history: {},
+  COOLDOWN: 2000,
+  show(category, message) {
+    const now = Date.now();
+    const last = this.history[category];
+    if (last && last.message === message && (now - last.time) < this.COOLDOWN) {
+      return;
+    }
+    this.history[category] = { message, time: now };
+    alert(message);
+  }
+};
 
 function fetchData() {
-  const playersRef = database.ref(
-    `tournament/${currentTournament}/bidding_data`
-  );
-  const userRef = database.ref(
-    `tournament/${currentTournament}/users/${currentUser}`
-  );
+  const playersRef = database.ref(`tournament/${currentTournament}/bidding_data`);
+  const userRef = database.ref(`tournament/${currentTournament}/users/${currentUser}`);
 
-  playersRef.once("value", snap => {
+  if (playersListener) playersRef.off("value", playersListener);
+  if (userListener) userRef.off("value", userListener);
+
+  playersListener = playersRef.on("value", snap => {
     const obj = snap.val() || {};
-    playerKeys = Object.keys(obj);
-    players = playerKeys.map(k => obj[k]);
+    const newPlayerKeys = Object.keys(obj);
+    const newPlayers = newPlayerKeys.map(k => obj[k]);
+
+    if (currentPlayerKey && newPlayerKeys.includes(currentPlayerKey)) {
+      currentPlayerIndex = newPlayerKeys.indexOf(currentPlayerKey);
+    } else if (newPlayerKeys.length > 0) {
+      const wasViewingPlayer = currentPlayerKey !== null;
+      currentPlayerIndex = 0;
+      currentPlayerKey = newPlayerKeys[0];
+      if (wasViewingPlayer) {
+        alertManager.show('navigation', 'Current player removed - showing first available player');
+      }
+    } else {
+      currentPlayerIndex = 0;
+      currentPlayerKey = null;
+    }
+
+    playerKeys = newPlayerKeys;
+    players = newPlayers;
 
     displayPlayer();
-    checkBidderStatus();
-    checkUserBidStatus();
+    updateButtonStates();
+  }, error => {
+    console.error("Error fetching players:", error);
+    alertManager.show('fetch_error', "Failed to load players. Please refresh.");
   });
 
-  userRef.once("value", snap => {
-    userData = snap.val() || {};
-    document.getElementById("user-money").textContent =
-      "Money: " + (userData.money || 0);
-    document.getElementById("user-players").textContent =
-      "Players Owned: " +
-      ((userData.players && Object.keys(userData.players).length) || 0);
+  userListener = userRef.on("value", snap => {
+    const data = snap.val() || {};
+    
+    userData = {
+      money: parseFloat(data.money) || 0,
+      bid: parseInt(data.bid) || 0,
+      players: data.players || {}
+    };
+    
+    document.getElementById("user-money").textContent = `Money: ${userData.money}`;
+    document.getElementById("user-players").textContent = 
+      `Players Owned: ${Object.keys(userData.players).length}`;
+    
+    updateButtonStates();
+  }, error => {
+    console.error("Error fetching user data:", error);
+    alertManager.show('fetch_error', "Failed to load user data. Please refresh.");
   });
 }
 
-// ---------------- DISPLAY ----------------
-
 function displayPlayer() {
-  const player = players[currentPlayerIndex];
-  if (!player) {
-    alert("No players available!");
+  if (players.length === 0 || currentPlayerIndex >= players.length) {
+    document.getElementById("player-name").textContent = "No players available";
+    document.getElementById("player-type").textContent = "";
+    document.getElementById("player-batting").textContent = "";
+    document.getElementById("player-bowling").textContent = "";
+    document.getElementById("player-skills").textContent = "";
+    document.getElementById("player-weakness").textContent = "";
+    document.getElementById("player-bidder").textContent = "";
+    document.getElementById("player-price").textContent = "";
+    document.getElementById("take-btn").disabled = true;
+    document.getElementById("leave-btn").disabled = true;
     return;
   }
 
-  document.getElementById("player-name").textContent = player.name;
-  document.getElementById("player-type").textContent = "Type: " + player.type;
-  document.getElementById("player-batting").textContent =
-    "Batting Rating: " + player.battingRating;
-  document.getElementById("player-bowling").textContent =
-    "Bowling Rating: " + player.bowlingRating;
-
-  document.getElementById("player-skills").textContent =
-    "Skills: " + (player.strengths ? player.strengths.join(", ") : "N/A");
-
-  document.getElementById("player-weakness").textContent =
-    "Weakness: " + (player.weakness ? player.weakness.join(", ") : "N/A");
-
-  document.getElementById("player-bidder").textContent =
-    "Bidder: " + (player.bidder || "None");
-
-  document.getElementById("player-price").textContent =
-    "Price: " + player.price;
+  const player = players[currentPlayerIndex];
+  document.getElementById("player-name").textContent = player.name || "Unknown";
+  document.getElementById("player-type").textContent = `Type: ${player.type || "N/A"}`;
+  document.getElementById("player-batting").textContent = `Batting Rating: ${player.battingRating || "N/A"}`;
+  document.getElementById("player-bowling").textContent = `Bowling Rating: ${player.bowlingRating || "N/A"}`;
+  document.getElementById("player-skills").textContent = 
+    `Skills: ${player.strengths ? player.strengths.join(", ") : "N/A"}`;
+  document.getElementById("player-weakness").textContent = 
+    `Weakness: ${player.weakness ? player.weakness.join(", ") : "N/A"}`;
+  document.getElementById("player-bidder").textContent = `Bidder: ${player.bidder || "None"}`;
+  document.getElementById("player-price").textContent = `Price: ${player.price || 0}`;
 }
 
-// ---------------- STATUS ----------------
-
-function checkBidderStatus() {
-  const p = players[currentPlayerIndex];
-  if (p && p.bidder === currentUser) {
+function updateButtonStates() {
+  if (players.length === 0 || currentPlayerIndex >= players.length) {
     document.getElementById("take-btn").disabled = true;
     document.getElementById("leave-btn").disabled = true;
-  } else {
-    document.getElementById("take-btn").disabled = false;
-    document.getElementById("leave-btn").disabled = false;
+    return;
   }
+
+  const player = players[currentPlayerIndex];
+  const userBidStatus = (userData.bid === 1);
+  const isCurrentBidder = (player.bidder === currentUser);
+  const shouldDisable = userBidStatus || isCurrentBidder;
+
+  document.getElementById("take-btn").disabled = shouldDisable;
+  document.getElementById("leave-btn").disabled = shouldDisable;
 }
 
-function checkUserBidStatus() {
-  if (userData.bid == 1) {
-    document.getElementById("take-btn").disabled = true;
-    document.getElementById("leave-btn").disabled = true;
-  }
-}
-
-// ---------------- HELPERS ----------------
-
-function getAllUsers(cb) {
-  database
-    .ref(`tournament/${currentTournament}/users`)
-    .once("value", snap => cb(snap.val() || {}));
+function normalizeUserBid(userObj) {
+  return parseInt(userObj?.bid) || 0;
 }
 
 function allExceptUserBidOne(users, excluded) {
   return Object.keys(users)
     .filter(u => u !== excluded)
-    .every(u => users[u].bid == 1);
+    .every(u => normalizeUserBid(users[u]) === 1);
 }
 
 function allUsersBidOne(users) {
-  return Object.keys(users).every(u => users[u].bid == 1);
+  return Object.keys(users).every(u => normalizeUserBid(users[u]) === 1);
 }
 
-// ---------------- TRANSFER ----------------
-
-function transferPlayerToTeam(player, key, receivingUser, cb) {
-  const teamRef = database.ref(
-    `tournament/${currentTournament}/users/${receivingUser}/players`
-  );
-  const bidRef = database.ref(
-    `tournament/${currentTournament}/bidding_data/${key}`
-  );
-  const userRef = database.ref(
-    `tournament/${currentTournament}/users/${receivingUser}`
-  );
-
-  const teamPlayerData = {
-    ...player,
-    matches: 0,
-    runs: 0,
-    wickets: 0
-  };
-
-  teamRef.once("value", snap => {
-    const team = snap.val() || {};
-    team[player.name] = teamPlayerData;
-
-    teamRef.set(team).then(() => {
-      bidRef.remove().then(() => {
-        userRef.once("value", uSnap => {
-          const u = uSnap.val() || {};
-          userRef.update({
-            money: (u.money || 0) - parseFloat(player.price),
-            bid: 0
-          }).then(cb);
-        });
+function resetAllUsersBidStatus(callback) {
+  const usersRef = database.ref(`tournament/${currentTournament}/users`);
+  
+  usersRef.once("value")
+    .then(snap => {
+      const users = snap.val() || {};
+      const updates = {};
+      Object.keys(users).forEach(userName => {
+        updates[`${userName}/bid`] = 0;
       });
+      return usersRef.update(updates);
+    })
+    .then(callback)
+    .catch(error => {
+      console.error("Error resetting bid status:", error);
+      if (callback) callback();
     });
-  });
 }
 
-// ---------------- TAKE ----------------
+function generateUniquePlayerKey(teamPlayers, baseName) {
+  let key = baseName;
+  let counter = 1;
+  while (teamPlayers[key]) {
+    key = `${baseName}_${counter}`;
+    counter++;
+  }
+  return key;
+}
 
-document.getElementById("take-btn").addEventListener("click", () => {
+async function transferPlayerToTeam(player, key, receivingUser) {
+  const playerPrice = parseFloat(player.price) || 0;
+  const tempTransferId = `temp_${Date.now()}_${Math.random()}`;
+  
+  const transferLockRef = database.ref(
+    `tournament/${currentTournament}/transfer_locks/${tempTransferId}`
+  );
+  const userRef = database.ref(`tournament/${currentTournament}/users/${receivingUser}`);
+  const teamRef = database.ref(`tournament/${currentTournament}/users/${receivingUser}/players`);
+  const bidRef = database.ref(`tournament/${currentTournament}/bidding_data/${key}`);
+
+  try {
+    await transferLockRef.set({ player: player.name, user: receivingUser, timestamp: Date.now() });
+
+    const userSnapshot = await userRef.once("value");
+    const currentUserData = userSnapshot.val() || {};
+    const currentMoney = parseFloat(currentUserData.money) || 0;
+
+    if (currentMoney < playerPrice) {
+      await transferLockRef.remove();
+      throw new Error("Insufficient funds");
+    }
+
+    const teamSnapshot = await teamRef.once("value");
+    const team = teamSnapshot.val() || {};
+    const uniqueKey = generateUniquePlayerKey(team, player.name);
+
+    const teamPlayerData = {
+      ...player,
+      originalName: player.name,
+      matches: 0,
+      runs: 0,
+      wickets: 0
+    };
+
+    await database.ref(`tournament/${currentTournament}/users/${receivingUser}`).update({
+      [`players/${uniqueKey}`]: teamPlayerData,
+      money: currentMoney - playerPrice,
+      bid: 0
+    });
+
+    await bidRef.remove();
+    await transferLockRef.remove();
+    await resetAllUsersBidStatus();
+
+    alertManager.show('transfer_success', `Player transferred to ${receivingUser === currentUser ? 'you' : receivingUser}`);
+  } catch (error) {
+    await transferLockRef.remove().catch(() => {});
+    console.error("Transfer error:", error);
+    alertManager.show('transfer_error', error.message || "Transfer failed. Please try again.");
+    throw error;
+  }
+}
+
+document.getElementById("take-btn").addEventListener("click", async () => {
+  if (players.length === 0 || currentPlayerIndex >= players.length) {
+    alertManager.show('action_error', "No player available to bid on");
+    return;
+  }
+
   const player = players[currentPlayerIndex];
   const key = playerKeys[currentPlayerIndex];
-  if (!player) return;
+  if (!player || !key) return;
 
-  getAllUsers(users => {
+  document.getElementById("take-btn").disabled = true;
+
+  try {
+    const usersSnapshot = await database.ref(`tournament/${currentTournament}/users`).once("value");
+    const users = usersSnapshot.val() || {};
+
     if (allExceptUserBidOne(users, currentUser)) {
-      transferPlayerToTeam(player, key, currentUser, () => {
-        alert("Player transferred to you");
-        fetchData();
-      });
+      await transferPlayerToTeam(player, key, currentUser);
       return;
     }
 
-    const newPrice = player.price + player.price * 0.1;
-    if (newPrice > userData.money) {
-      alert("Insufficient funds");
+    const userSnapshot = await database.ref(`tournament/${currentTournament}/users/${currentUser}`).once("value");
+    const freshUserData = userSnapshot.val() || {};
+    const currentMoney = parseFloat(freshUserData.money) || 0;
+    const currentPrice = parseFloat(player.price) || 0;
+    const newPrice = currentPrice * 1.1;
+
+    if (newPrice > currentMoney) {
+      alertManager.show('funds_error', "Insufficient funds");
+      document.getElementById("take-btn").disabled = false;
       return;
     }
 
-    database
-      .ref(`tournament/${currentTournament}/bidding_data/${key}`)
-      .update({
+    const bidRef = database.ref(`tournament/${currentTournament}/bidding_data/${key}`);
+    const result = await bidRef.transaction(currentData => {
+      if (!currentData) return;
+      return {
+        ...currentData,
         bidder: currentUser,
         price: newPrice
-      })
-      .then(fetchData);
-  });
+      };
+    });
+
+    if (!result.committed) {
+      alertManager.show('bid_error', "Bid failed - player may have been removed");
+    }
+  } catch (error) {
+    console.error("Error placing bid:", error);
+    alertManager.show('bid_error', "Failed to place bid. Please try again.");
+    document.getElementById("take-btn").disabled = false;
+  }
 });
 
-// ---------------- LEAVE ----------------
+document.getElementById("leave-btn").addEventListener("click", async () => {
+  if (players.length === 0 || currentPlayerIndex >= players.length) {
+    alertManager.show('action_error', "No player available");
+    return;
+  }
 
-document.getElementById("leave-btn").addEventListener("click", () => {
   const player = players[currentPlayerIndex];
   const key = playerKeys[currentPlayerIndex];
-  if (!player) return;
+  if (!player || !key) return;
 
   const bidder = player.bidder || "";
+  document.getElementById("leave-btn").disabled = true;
 
-  getAllUsers(users => {
-    database
-      .ref(`tournament/${currentTournament}/users/${currentUser}/bid`)
-      .set(1);
+  try {
+    const bidRef = database.ref(`tournament/${currentTournament}/bidding_data/${key}`);
+    
+    await bidRef.transaction(currentData => {
+      if (!currentData) return;
+      return currentData;
+    });
+
+    await database.ref(`tournament/${currentTournament}/users/${currentUser}/bid`).set(1);
+
+    const usersSnapshot = await database.ref(`tournament/${currentTournament}/users`).once("value");
+    const users = usersSnapshot.val() || {};
 
     if (bidder && allExceptUserBidOne(users, bidder)) {
-      transferPlayerToTeam(player, key, bidder, () => {
-        alert(`Player transferred to ${bidder}`);
-        fetchData();
-      });
+      await transferPlayerToTeam(player, key, bidder);
       return;
     }
 
-    const updated = { ...users, [currentUser]: { bid: 1 } };
-    if (allUsersBidOne(updated)) {
-      database
-        .ref(`tournament/${currentTournament}/bidding_data/${key}`)
-        .remove()
-        .then(() => {
-          alert("Player removed (everyone left)");
-          fetchData();
-        });
+    if (allUsersBidOne(users)) {
+      await database.ref(`tournament/${currentTournament}/bidding_data/${key}`).remove();
+      await resetAllUsersBidStatus();
+      alertManager.show('remove_success', "Player removed (everyone left)");
     }
-  });
+  } catch (error) {
+    console.error("Error in leave operation:", error);
+    alertManager.show('leave_error', "Failed to leave bid. Please try again.");
+    document.getElementById("leave-btn").disabled = false;
+  }
 });
 
-// ---------------- REFRESH ----------------
+document.getElementById("refresh-btn")?.addEventListener("click", () => fetchData());
 
-document.getElementById("refresh-btn").addEventListener("click", fetchData);
+document.getElementById("prev-btn")?.addEventListener("click", () => {
+  if (players.length === 0) return;
+  currentPlayerIndex = (currentPlayerIndex - 1 + players.length) % players.length;
+  currentPlayerKey = playerKeys[currentPlayerIndex];
+  displayPlayer();
+  updateButtonStates();
+});
+
+document.getElementById("next-btn")?.addEventListener("click", () => {
+  if (players.length === 0) return;
+  currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+  currentPlayerKey = playerKeys[currentPlayerIndex];
+  displayPlayer();
+  updateButtonStates();
+});
+
+window.addEventListener("beforeunload", () => {
+  if (playersListener) {
+    database.ref(`tournament/${currentTournament}/bidding_data`).off("value", playersListener);
+  }
+  if (userListener) {
+    database.ref(`tournament/${currentTournament}/users/${currentUser}`).off("value", userListener);
+  }
+});
+
 window.onload = fetchData;
