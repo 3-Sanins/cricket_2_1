@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Ready</title>
+    <link rel="stylesheet" href="game_ready.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Tournament Header -->
+        <div class="tournament-header">
+            <h1 id="tournamentTitle">TOURNAMENT</h1>
+            <div class="match-info" id="matchInfo"></div>
+        </div>
+
+        <!-- Team Stats -->
+        <div class="stats-container">
+            <div class="team-stats" id="team1Stats">
+                <h3 id="team1Name"></h3>
+                <div class="stat-row">
+                    <span>Matches:</span>
+                    <span id="team1Matches">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Wins:</span>
+                    <span id="team1Wins">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Draws:</span>
+                    <span id="team1Draws">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Losses:</span>
+                    <span id="team1Losses">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Points:</span>
+                    <span id="team1Points">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Money:</span>
+                    <span id="team1Money">0</span>
+                </div>
+            </div>
+
+            <div class="vs">VS</div>
+
+            <div class="team-stats" id="team2Stats">
+                <h3 id="team2Name"></h3>
+                <div class="stat-row">
+                    <span>Matches:</span>
+                    <span id="team2Matches">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Wins:</span>
+                    <span id="team2Wins">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Draws:</span>
+                    <span id="team2Draws">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Losses:</span>
+                    <span id="team2Losses">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Points:</span>
+                    <span id="team2Points">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Money:</span>
+                    <span id="team2Money">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Content Sections -->
+        <div class="content-section">
+            <!-- Proceed Button (Initial) -->
+            <div id="proceedSection" class="hidden">
+                <button id="proceedBtn" class="btn-primary">PROCEED TO MATCH</button>
+            </div>
+
+            <!-- Pitch Selection (Home Team in League) -->
+            <div id="pitchSection" class="hidden">
+                <h2>🏟️ HOME TEAM ADVANTAGE</h2>
+                <p class="subtitle">Select Pitch Type:</p>
+                <div class="pitch-options">
+                    <button class="pitch-btn" data-pitch="balanced">
+                        <strong>BALANCED</strong><br>
+                        <small>Even contest</small>
+                    </button>
+                    <button class="pitch-btn" data-pitch="flat">
+                        <strong>FLAT</strong><br>
+                        <small>Batsman friendly</small>
+                    </button>
+                    <button class="pitch-btn" data-pitch="green">
+                        <strong>GREEN TOP</strong><br>
+                        <small>Bowler friendly</small>
+                    </button>
+                    <button class="pitch-btn" data-pitch="cracked">
+                        <strong>CRACKED</strong><br>
+                        <small>Unpredictable</small>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Toss Section -->
+            <div id="tossSection" class="hidden">
+                <div id="tossResult"></div>
+                <div id="tossChoiceSection" class="hidden">
+                    <p>Choose what you want to do:</p>
+                    <div class="toss-options">
+                        <button id="chooseBat" class="btn-secondary">BAT 🏏</button>
+                        <button id="chooseBall" class="btn-secondary">BALL 🎾</button>
+                    </div>
+                </div>
+                <div id="waitingToss" class="hidden">
+                    <p>⏳ Waiting for opponent to choose...</p>
+                </div>
+            </div>
+
+            <!-- Role Display -->
+            <div id="roleSection" class="hidden">
+                <h2 id="roleTitle"></h2>
+                <div class="pitch-display" id="pitchDisplay"></div>
+                <button id="teamSelectionBtn" class="btn-primary">PROCEED TO TEAM SELECTION</button>
+            </div>
+
+            <!-- Waiting Messages -->
+            <div id="waitingSection" class="hidden">
+                <p id="waitingMessage">⏳ Waiting...</p>
+            </div>
+
+            <!-- Spectator Section -->
+            <div id="spectatorSection" class="hidden">
+                <p class="info-text">You are viewing this match as a spectator</p>
+                <button id="spectatorProceedBtn" class="btn-secondary">WATCH MATCH</button>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="messageSection" class="hidden">
+            <p id="messageText"></p>
+        </div>
+
+        <!-- Popup Modal -->
+        <div id="popup" class="popup hidden">
+            <div class="popup-content">
+                <p id="popupText"></p>
+                <button id="popupClose" class="btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game_ready.js"></script>
+</body>
+</html>
