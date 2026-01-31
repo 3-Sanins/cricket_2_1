@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Your Team</title>
+    <link rel="stylesheet" href="game_ready.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Tournament Header -->
+        <div class="tournament-header">
+            <h1 id="tournamentTitle">TOURNAMENT</h1>
+            <div class="match-info" id="matchInfo"></div>
+        </div>
+
+        <!-- Match Status & Selection Info -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="label">Pitch:</span>
+                <span id="pitchType" class="value">-</span>
+            </div>
+            <div class="status-item">
+                <span class="label">Your Role:</span>
+                <span id="playerRole" class="value">-</span>
+            </div>
+            <div class="status-item">
+                <span class="label">Selected:</span>
+                <span id="selectedCount">0/11</span>
+            </div>
+            <div class="status-item">
+                <span class="label">Captain:</span>
+                <span id="captainName">Not Selected</span>
+            </div>
+        </div>
+
+        <!-- Players Table -->
+        <div class="table-container">
+            <div class="table-header">
+                <h2>Select Your Playing XI</h2>
+                <div class="table-controls">
+                    <input type="text" id="searchInput" placeholder="Search players..." class="search-input">
+                    <select id="filterSelect" class="filter-select">
+                        <option value="all">All Players</option>
+                        <option value="batsman">Batsmen</option>
+                        <option value="bowler">Bowlers</option>
+                        <option value="allrounder">All-rounders</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="playersTable">
+                    <thead>
+                        <tr>
+                            <th width="50px">Select</th>
+                            <th>Player</th>
+                            <th width="80px">Role</th>
+                            <th width="70px">Bat ⭐</th>
+                            <th width="70px">Bowl ⭐</th>
+                            <th width="60px">Hand</th>
+                            <th>Key Strength</th>
+                            <th width="150px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersTableBody">
+                        <!-- Players will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Selected Players Summary -->
+        <div class="selected-summary">
+            <h3>Selected Players</h3>
+            <div id="selectedPlayersList" class="players-list">
+                <!-- Selected players will appear here -->
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="submit-section">
+            <button id="submitBtn" class="btn-primary" disabled>SUBMIT TEAM</button>
+            <button id="backBtn" class="btn-secondary">BACK</button>
+        </div>
+
+        <!-- Player Details Popup -->
+        <div id="playerPopup" class="popup hidden">
+            <div class="popup-content player-details">
+                <h2 id="popupPlayerName"></h2>
+                <div class="player-stats-grid">
+                    <div class="stat-box">
+                        <span class="stat-label">Batting Rating</span>
+                        <span id="popupBatting" class="stat-value"></span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Bowling Rating</span>
+                        <span id="popupBowling" class="stat-value"></span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Hand</span>
+                        <span id="popupHand" class="stat-value"></span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Type</span>
+                        <span id="popupType" class="stat-value"></span>
+                    </div>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Strengths</h3>
+                    <div id="popupStrengths" class="tags-container"></div>
+                </div>
+                
+                <div id="weaknessSection" class="details-section">
+                    <h3>Weaknesses</h3>
+                    <div id="popupWeaknesses" class="tags-container"></div>
+                </div>
+                
+                <button id="closePopup" class="btn-primary">CLOSE</button>
+            </div>
+        </div>
+
+        <!-- Warning Popup -->
+        <div id="warningPopup" class="popup hidden">
+            <div class="popup-content">
+                <p id="warningText"></p>
+                <button id="warningClose" class="btn-primary">OK</button>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <p>Loading players...</p>
+        </div>
+    </div>
+
+    <script src="team_selection.js"></script>
+</body>
+</html>
