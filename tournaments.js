@@ -313,7 +313,33 @@ tRef.once("value").then(snapshot => {
         (playerName === nextMatch.user1 || playerName === nextMatch.user2)) ?
       "Play" :
       "Watch";
+    // Add this right after setting btn.innerText
+btn.onclick = () => {
+  if (!nextMatch) return;
+  
+  // Build URL parameters
+  const params = new URLSearchParams({
+    tournamentname: tournamentName.toLowerCase(),
+    matchtype: nextMatch.type, // "league" or "knockout"
+    user1: nextMatch.user1,
+    user2: nextMatch.user2
+  });
+  
+  // Add home parameter only for league matches
+  if (nextMatch.type === "league" && nextMatch.home) {
+    params.append("home", nextMatch.home);
   }
+  
+  // Add round for knockout matches
+  if (nextMatch.type === "knockout" && nextMatch.round) {
+    params.append("round", nextMatch.round); // "semi" or "final"
+  }
+  
+  // Redirect to game_ready.html
+  window.location.href = `game_ready.html?${params.toString()}`;
+};
+  }
+  
 
 });
 
