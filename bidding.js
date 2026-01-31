@@ -280,6 +280,14 @@ document.getElementById("take-btn").addEventListener("click", async () => {
     const currentMoney = parseFloat(freshUserData.money) || 0;
     const currentPrice = parseFloat(player.price) || 0;
     const newPrice = currentPrice * 1.1;
+    // Take button mein ye add kar debugging ke liye:
+const currentPrice = parseFloat(player.price) || 0;
+const newPrice = currentPrice * 1.1;
+
+console.log("Current Price:", currentPrice);
+console.log("New Price:", newPrice);
+console.log("Player:", player);
+console.log("Key:", key);
 
     if (newPrice > currentMoney) {
       alertManager.show('funds_error', "Insufficient funds");
