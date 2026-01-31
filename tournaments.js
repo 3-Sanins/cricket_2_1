@@ -124,25 +124,30 @@ tRef.once("value").then(snapshot => {
   }
 
   /* PLAYING */
+  /* PLAYING */
   if (status.startsWith("playing")) {
     document.getElementById("playingSection").classList.remove("hidden");
 
-    const users =
-      data["season" + seasonNo]?.users || data.users;
+    const season = data["season" + seasonNo];
+    const users = season?.users || data.users;
+    const schedule = season?.schedule || {};
 
+    /* -------- POINTS TABLE (same as before) -------- */
     const tbody = document.querySelector("#pointsTable tbody");
     tbody.innerHTML = "";
 
     const rows = Object.keys(users).map(u => {
       const d = users[u];
-      const wins = d.matches_won || 0;
+      const wins = d.wins || 0;
       const draw = d.draw || 0;
+      const played = d.matchesPlayed || 0;
+
       return {
         name: u,
-        played: d.matches_played || 0,
+        played,
         wins,
         draw,
-        lost: d.lost || 0,
+        lost: played - wins - draw,
         points: wins * 2 + draw
       };
     }).sort((a, b) => b.points - a.points);
@@ -152,33 +157,151 @@ tRef.once("value").then(snapshot => {
       if (r.name === playerName) tr.classList.add("highlight");
 
       tr.innerHTML = `
-        <td>${r.name}</td>
-        <td>${r.played}</td>
-        <td>${r.wins}</td>
-        <td>${r.draw}</td>
-        <td>${r.lost}</td>
-        <td>${r.points}</td>
-      `;
+      <td>${r.name}</td>
+      <td>${r.played}</td>
+      <td>${r.wins}</td>
+      <td>${r.draw}</td>
+      <td>${r.lost}</td>
+      <td>${r.points}</td>
+    `;
       tbody.appendChild(tr);
     });
 
-    /* NEXT MATCH (placeholder) */
-    const seasonData = data["season" + seasonNo];
-    const schedule = seasonData?.schedule || {};
+    /* -------- KNOCKOUT AUTO-CREATION -------- */
 
-    // next unplayed match pick
-    const nextMatchEntry = Object.values(schedule).find(m => m.played === false);
+    const allLeagueEnded = Object.values(schedule)
+      .filter(m => m.type === "league")
+      .every(m => m.played === true);
 
+    const hasKnockout = Object.values(schedule)
+      .some(m => m.type === "knockout");
+
+    if (allLeagueEnded && !hasKnockout) {
+
+      const ranked = rows; // already sorted
+      const count = ranked.length;
+      const newMatches = {};
+
+      if (count > 4) {
+        newMatches["semi_1"] = {
+          type: "knockout",
+          round: "semi",
+          user1: ranked[0].name,
+          user2: ranked[2].name,
+          played: false,
+          result: null
+        };
+
+        newMatches["semi_2"] = {
+          type: "knockout",
+          round: "semi",
+          user1: ranked[1].name,
+          user2: ranked[3].name,
+          played: false,
+          result: null
+        };
+      }
+
+      else if (count === 4) {
+        newMatches["semi"] = {
+          type: "knockout",
+          round: "semi",
+          user1: ranked[1].name,
+          user2: ranked[2].name,
+          played: false,
+          result: null
+        };
+
+        newMatches["final"] = {
+          type: "knockout",
+          round: "final",
+          user1: ranked[0].name,
+          user2: "TBD",
+          played: false,
+          result: null
+        };
+      }
+
+      else if (count === 3) {
+        const diff12 = Math.abs(ranked[0].points - ranked[1].points);
+        const diff23 = Math.abs(ranked[1].points - ranked[2].points);
+
+        if (diff23 < diff12) {
+          newMatches["semi"] = {
+            type: "knockout",
+            round: "semi",
+            user1: ranked[1].name,
+            user2: ranked[2].name,
+            played: false,
+            result: null
+          };
+
+          newMatches["final"] = {
+            type: "knockout",
+            round: "final",
+            user1: ranked[0].name,
+            user2: "TBD",
+            played: false,
+            result: null
+          };
+        } else {
+          newMatches["final"] = {
+            type: "knockout",
+            round: "final",
+            user1: ranked[0].name,
+            user2: ranked[1].name,
+            played: false,
+            result: null
+          };
+        }
+      }
+
+      tRef.child("season" + seasonNo + "/schedule").update(newMatches);
+    }
+
+    const finalMatch = Object.values(schedule)
+      .find(m => m.type === "knockout" && m.round === "final" && m.played === true);
+
+    if (finalMatch && finalMatch.result) {
+      const winner = finalMatch.result;
+
+      document.getElementById("seasonWinner").innerText =
+        `${winner} won the Season ${seasonNo} of ${tournamentName}`;
+
+      document.getElementById("seasonWinner").classList.remove("hidden");
+    }
+    if (
+      finalMatch &&
+      finalMatch.result &&
+      creator === playerName
+    ) {
+      const nextSeasonBtn = document.getElementById("nextSeasonBtn");
+      nextSeasonBtn.classList.remove("hidden");
+
+      nextSeasonBtn.onclick = async () => {
+        const nextSeasonNo = parseInt(seasonNo) + 1;
+
+        await tRef.update({
+          status: "waiting" + nextSeasonNo
+        });
+
+        location.reload();
+      };
+    }
+
+
+    /* -------- NEXT MATCH DISPLAY -------- */
+
+    const nextMatch = Object.values(schedule).find(m => m.played === false);
     let nextMatchText = "No upcoming matches";
 
-    if (nextMatchEntry) {
-      if (nextMatchEntry.type === "league") {
+    if (nextMatch) {
+      if (nextMatch.type === "league") {
         nextMatchText =
-          `Next match (League): ${nextMatchEntry.user1} vs ${nextMatchEntry.user2}
-Home: ${nextMatchEntry.home}`;
-      } else if (nextMatchEntry.type === "knockout") {
+          `Next match (League): ${nextMatch.user1} vs ${nextMatch.user2}\nHome: ${nextMatch.home}`;
+      } else {
         nextMatchText =
-          `Next match (${nextMatchEntry.round.toUpperCase()}): ${nextMatchEntry.user1} vs ${nextMatchEntry.user2}`;
+          `Next match (${nextMatch.round.toUpperCase()}): ${nextMatch.user1} vs ${nextMatch.user2}`;
       }
     }
 
@@ -186,8 +309,12 @@ Home: ${nextMatchEntry.home}`;
 
     const btn = document.getElementById("playWatchBtn");
     btn.innerText =
-      (playerName === userA || playerName === userB) ? "Play" : "Watch";
+      (nextMatch &&
+        (playerName === nextMatch.user1 || playerName === nextMatch.user2)) ?
+      "Play" :
+      "Watch";
   }
+
 });
 
 /* HELPERS */
