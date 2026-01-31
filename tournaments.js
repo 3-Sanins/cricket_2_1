@@ -265,11 +265,17 @@ tRef.once("value").then(snapshot => {
     if (finalMatch && finalMatch.result) {
       const winner = finalMatch.result;
 
-      document.getElementById("seasonWinner").innerText =
-        `${winner} won the Season ${seasonNo} of ${tournamentName}`;
+      const winnerElement = document.getElementById("seasonWinner");
+      const winnerText = winnerElement.querySelector('.winner-text');
+      if (winnerText) {
+        winnerText.innerText = `${winner} won the Season ${seasonNo} of ${tournamentName}`;
+      } else {
+        winnerElement.innerText = `${winner} won the Season ${seasonNo} of ${tournamentName}`;
+      }
 
-      document.getElementById("seasonWinner").classList.remove("hidden");
+      winnerElement.classList.remove("hidden");
     }
+    
     if (
       finalMatch &&
       finalMatch.result &&
@@ -313,40 +319,44 @@ tRef.once("value").then(snapshot => {
         (playerName === nextMatch.user1 || playerName === nextMatch.user2)) ?
       "Play" :
       "Watch";
+    
     // Add this right after setting btn.innerText
-btn.onclick = () => {
-  if (!nextMatch) return;
-  
-  // Build URL parameters
-  const params = new URLSearchParams({
-    tournamentname: tournamentName.toLowerCase(),
-    matchtype: nextMatch.type, // "league" or "knockout"
-    user1: nextMatch.user1,
-    user2: nextMatch.user2
-  });
-  
-  // Add home parameter only for league matches
-  if (nextMatch.type === "league" && nextMatch.home) {
-    params.append("home", nextMatch.home);
+    btn.onclick = () => {
+      if (!nextMatch) return;
+      
+      // Build URL parameters
+      const params = new URLSearchParams({
+        tournamentname: tournamentName.toLowerCase(),
+        matchtype: nextMatch.type, // "league" or "knockout"
+        user1: nextMatch.user1,
+        user2: nextMatch.user2
+      });
+      
+      // Add home parameter only for league matches
+      if (nextMatch.type === "league" && nextMatch.home) {
+        params.append("home", nextMatch.home);
+      }
+      
+      // Add round for knockout matches
+      if (nextMatch.type === "knockout" && nextMatch.round) {
+        params.append("round", nextMatch.round); // "semi" or "final"
+      }
+      
+      // Redirect to game_ready.html
+      window.location.href = `game_ready.html?${params.toString()}`;
+    };
   }
-  
-  // Add round for knockout matches
-  if (nextMatch.type === "knockout" && nextMatch.round) {
-    params.append("round", nextMatch.round); // "semi" or "final"
-  }
-  
-  // Redirect to game_ready.html
-  window.location.href = `game_ready.html?${params.toString()}`;
-};
-  }
-  
-
 });
 
 /* HELPERS */
 function showMessage(msg) {
   const m = document.getElementById("message");
-  m.innerText = msg;
+  const msgText = m.querySelector('.message-text');
+  if (msgText) {
+    msgText.innerText = msg;
+  } else {
+    m.innerText = msg;
+  }
   m.classList.remove("hidden");
 }
 

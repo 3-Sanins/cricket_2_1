@@ -96,9 +96,9 @@ function fetchData() {
       players: data.players || {}
     };
     
-    document.getElementById("user-money").textContent = `Money: ${userData.money}`;
+    document.getElementById("user-money").textContent = `₹${userData.money.toLocaleString()}`;
     document.getElementById("user-players").textContent = 
-      `Players Owned: ${Object.keys(userData.players).length}`;
+      `${Object.keys(userData.players).length} Players`;
     
     updateButtonStates();
   }, error => {
@@ -110,13 +110,13 @@ function fetchData() {
 function displayPlayer() {
   if (players.length === 0 || currentPlayerIndex >= players.length) {
     document.getElementById("player-name").textContent = "No players available";
-    document.getElementById("player-type").textContent = "";
-    document.getElementById("player-batting").textContent = "";
-    document.getElementById("player-bowling").textContent = "";
-    document.getElementById("player-skills").textContent = "";
-    document.getElementById("player-weakness").textContent = "";
-    document.getElementById("player-bidder").textContent = "";
-    document.getElementById("player-price").textContent = "";
+    document.getElementById("player-type").textContent = "Waiting...";
+    document.getElementById("player-batting").textContent = "-";
+    document.getElementById("player-bowling").textContent = "-";
+    document.getElementById("player-skills").textContent = "N/A";
+    document.getElementById("player-weakness").textContent = "N/A";
+    document.getElementById("player-bidder").textContent = "None";
+    document.getElementById("player-price").textContent = "₹0";
     document.getElementById("take-btn").disabled = true;
     document.getElementById("leave-btn").disabled = true;
     return;
@@ -124,15 +124,21 @@ function displayPlayer() {
 
   const player = players[currentPlayerIndex];
   document.getElementById("player-name").textContent = player.name || "Unknown";
-  document.getElementById("player-type").textContent = `Type: ${player.type || "N/A"}`;
-  document.getElementById("player-batting").textContent = `Batting Rating: ${player.battingRating || "N/A"}`;
-  document.getElementById("player-bowling").textContent = `Bowling Rating: ${player.bowlingRating || "N/A"}`;
+  
+  // Extract just the type value without "Type: " prefix
+  const typeText = player.type || "N/A";
+  document.getElementById("player-type").textContent = typeText;
+  
+  // Extract just the rating values
+  document.getElementById("player-batting").textContent = player.battingRating || "N/A";
+  document.getElementById("player-bowling").textContent = player.bowlingRating || "N/A";
+  
   document.getElementById("player-skills").textContent = 
-    `Skills: ${player.strengths ? player.strengths.join(", ") : "N/A"}`;
+    player.strengths ? player.strengths.join(", ") : "N/A";
   document.getElementById("player-weakness").textContent = 
-    `Weakness: ${player.weakness ? player.weakness.join(", ") : "N/A"}`;
-  document.getElementById("player-bidder").textContent = `Bidder: ${player.bidder || "None"}`;
-  document.getElementById("player-price").textContent = `Price: ${player.price || 0}`;
+    player.weakness ? player.weakness.join(", ") : "N/A";
+  document.getElementById("player-bidder").textContent = player.bidder || "None";
+  document.getElementById("player-price").textContent = `₹${player.price || 0}`;
 }
 
 function updateButtonStates() {

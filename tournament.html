@@ -20,27 +20,50 @@
 </div>
 
 <div class="card-container" id="tournamentList">
-    <!-- tournament buttons injected here -->
+    <!-- tournament cards injected here -->
 </div>
 
 <!-- Bottom Controls -->
 <div class="bottom-controls">
-    <button class="action-btn left" onclick="openJoin()">Join</button>
-    <button class="action-btn right" onclick="openCreate()">Create</button>
+    <button class="action-btn join-btn" onclick="openJoin()">
+        <span class="btn-icon">+</span>
+        <span>Join Tournament</span>
+    </button>
+    <button class="action-btn create-btn" onclick="openCreate()">
+        <span class="btn-icon">✦</span>
+        <span>Create Tournament</span>
+    </button>
 </div>
 
 <!-- Modal -->
 <div class="modal" id="modal">
+    <div class="modal-overlay" onclick="closeModal()"></div>
     <div class="modal-card">
-        <h2 id="modalTitle"></h2>
+        <div class="modal-header">
+            <h2 id="modalTitle"></h2>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
 
-        <input id="tName" placeholder="Tournament Name">
-        <input id="tPass" placeholder="Password">
-        <input id="tMoney" placeholder="Money (only for Create)" type="number">
+        <div class="modal-body">
+            <div class="input-group">
+                <label>Tournament Name</label>
+                <input id="tName" placeholder="Enter tournament name">
+            </div>
+            
+            <div class="input-group">
+                <label>Password</label>
+                <input id="tPass" type="password" placeholder="Enter password">
+            </div>
+            
+            <div class="input-group" id="moneyGroup" style="display: none;">
+                <label>Starting Money</label>
+                <input id="tMoney" placeholder="Enter amount" type="number">
+            </div>
+        </div>
 
         <div class="modal-actions">
-            <button onclick="closeModal()">Cancel</button>
-            <button onclick="submitModal()">Submit</button>
+            <button class="modal-btn cancel-btn" onclick="closeModal()">Cancel</button>
+            <button class="modal-btn submit-btn" onclick="submitModal()">Submit</button>
         </div>
     </div>
 </div>

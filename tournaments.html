@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Tournament</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cricket Clash – Tournament Dashboard</title>
   <link rel="stylesheet" href="tournaments.css">
   <script src="loader.js"></script>
 
@@ -13,40 +14,128 @@
 </head>
 
 <body>
+  <!-- Background Effects -->
+  <div class="bg-pattern"></div>
+  <div class="gradient-orb orb-1"></div>
+  <div class="gradient-orb orb-2"></div>
 
-  <h1 id="tournamentTitle"></h1>
+  <!-- Main Container -->
+  <div class="container">
+    
+    <!-- Header Section -->
+    <header class="tournament-header">
+      <div class="header-content">
+        <div class="back-button" onclick="history.back()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </div>
+        <div class="tournament-title-wrapper">
+          <h1 id="tournamentTitle" class="tournament-title">Loading...</h1>
+          <div class="title-underline"></div>
+        </div>
+      </div>
+    </header>
 
-  <div id="message" class="hidden"></div>
+    <!-- Message Section -->
+    <div id="message" class="message-card hidden">
+      <div class="message-icon">⏳</div>
+      <p class="message-text"></p>
+    </div>
 
-  <div id="creatorControls" class="hidden">
-    <p id="userCount"></p>
-    <button id="startBiddingBtn">Start this Season with the Bidding</button>
-  </div>
+    <!-- Creator Controls Section -->
+    <div id="creatorControls" class="control-section hidden">
+      <div class="control-card creator-card">
+        <div class="card-header">
+          <div class="header-icon">👑</div>
+          <h3>Tournament Creator Controls</h3>
+        </div>
+        <div class="card-body">
+          <p id="userCount" class="user-count"></p>
+          <button id="startBiddingBtn" class="btn btn-primary">
+            <span class="btn-icon">🎯</span>
+            <span>Start Season Bidding</span>
+          </button>
+        </div>
+      </div>
+    </div>
 
-  <div id="biddingControls" class="hidden">
-    <button id="goToBiddingBtn">Go to Bidding</button>
-    <button id="stopBiddingBtn" class="hidden">Stop the Bidding</button>
-  </div>
+    <!-- Bidding Controls Section -->
+    <div id="biddingControls" class="control-section hidden">
+      <div class="control-card bidding-card">
+        <div class="card-header">
+          <div class="header-icon">💰</div>
+          <h3>Bidding Phase Active</h3>
+        </div>
+        <div class="card-body">
+          <p class="info-text">The bidding phase is currently in progress. Build your dream team!</p>
+          <div class="button-group">
+            <button id="goToBiddingBtn" class="btn btn-primary">
+              <span class="btn-icon">🔨</span>
+              <span>Go to Bidding</span>
+            </button>
+            <button id="stopBiddingBtn" class="btn btn-danger hidden">
+              <span class="btn-icon">⏹</span>
+              <span>Stop Bidding</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <div id="playingSection" class="hidden">
-    <h2>Points Table</h2>
+    <!-- Playing Section -->
+    <div id="playingSection" class="playing-section hidden">
+      
+      <!-- Points Table Card -->
+      <div class="stats-card">
+        <div class="card-header">
+          <div class="header-icon">📊</div>
+          <h2>Points Table</h2>
+        </div>
+        <div class="table-container">
+          <table id="pointsTable">
+            <thead>
+              <tr>
+                <th>Team</th>
+                <th>P</th>
+                <th>W</th>
+                <th>D</th>
+                <th>L</th>
+                <th>PTS</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
 
-    <table id="pointsTable">
-      <thead>
-        <tr>
-          <th>User</th>
-          <th>Played</th>
-          <th>Won</th>
-          <th>Draw</th>
-          <th>Lost</th>
-          <th>Points</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+      <!-- Season Winner Banner -->
+      <div id="seasonWinner" class="winner-banner hidden">
+        <div class="trophy-icon">🏆</div>
+        <p class="winner-text"></p>
+        <div class="confetti"></div>
+      </div>
 
-    <div id="nextMatch"></div>
-    <button id="playWatchBtn"></button>
+      <!-- Next Season Button -->
+      <button id="nextSeasonBtn" class="btn btn-secondary hidden">
+        <span class="btn-icon">🔄</span>
+        <span>Start Next Season</span>
+      </button>
+
+      <!-- Next Match Card -->
+      <div class="match-card">
+        <div class="card-header">
+          <div class="header-icon">⚡</div>
+          <h3>Upcoming Match</h3>
+        </div>
+        <div class="match-info">
+          <p id="nextMatch" class="match-details">Loading...</p>
+        </div>
+        <button id="playWatchBtn" class="btn btn-match">Play</button>
+      </div>
+
+    </div>
+
   </div>
 
   <script src="tournaments.js"></script>

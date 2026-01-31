@@ -19,13 +19,12 @@ if (typeof playerName !== "string" || playerName.trim() === "") {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-
-
 const modal = document.getElementById("modal");
 const modalTitle = document.getElementById("modalTitle");
 const tName = document.getElementById("tName");
 const tPass = document.getElementById("tPass");
 const tMoney = document.getElementById("tMoney");
+const moneyGroup = document.getElementById("moneyGroup");
 
 let mode = "";
 
@@ -50,7 +49,29 @@ function loadTournaments() {
                 if (users.exists() && users.hasChild(playerName)) {
                     const card = document.createElement("div");
                     card.className = "card";
-                    card.innerText = t.key;
+
+                    // Create card structure
+                    card.innerHTML = `
+                        <div class="card-image">
+                            <div class="card-image-placeholder">
+                                🏏
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">${t.key}</div>
+                            <div class="card-meta">
+                                <div class="card-meta-item">
+                                    <div class="card-meta-icon">👥</div>
+                                    <span>Active</span>
+                                </div>
+                                <div class="card-meta-item">
+                                    <div class="card-meta-icon">⚡</div>
+                                    <span>Live</span>
+                                </div>
+                            </div>
+                            <div class="card-arrow">→</div>
+                        </div>
+                    `;
 
                     card.onclick = () => {
                         localStorage.setItem("currentTournament", t.key);
@@ -71,14 +92,14 @@ function loadTournaments() {
 function openJoin() {
     mode = "join";
     modalTitle.innerText = "Join Tournament";
-    tMoney.style.display = "none";
+    moneyGroup.style.display = "none";
     openModal();
 }
 
 function openCreate() {
     mode = "create";
     modalTitle.innerText = "Create Tournament";
-    tMoney.style.display = "block";
+    moneyGroup.style.display = "block";
     openModal();
 }
 

@@ -3,38 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cricket Bidding Game</title>
+    <title>Cricket Clash - Auction Arena</title>
     <link rel="stylesheet" href="bidding.css">
     <script src="loader.js"></script>
 </head>
 <body>
-    <div id="app">
-        <h1>Cricket Player Bidding</h1>
-        <div id="user-info">
-            <div id="user-money">Money: Loading...</div>
-            <div id="user-players">Players Owned: Loading...</div>
-        </div>
-        <div id="player-card">
-            <div id="player-details">
-                <h2 id="player-name">Loading...</h2>
-                <p id="player-type">Type: Loading...</p>
-                <p id="player-batting">Batting Rating: Loading...</p>
-                <p id="player-bowling">Bowling Rating: Loading...</p>
-                <p id="player-skills">Skills: Loading...</p>
-                <p id="player-bidder">Bidder: Loading...</p>
-                <p id="player-weakness"></p>
+    <!-- Background Elements -->
+    <div class="stadium-bg"></div>
+    <div class="spotlight spotlight-1"></div>
+    <div class="spotlight spotlight-2"></div>
+    <div class="cricket-pattern"></div>
 
+    <!-- Main Container -->
+    <div class="auction-container">
+        
+        <!-- Header Section -->
+        <header class="auction-header">
+            <div class="header-left">
+                <div class="back-btn" onclick="history.back()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </div>
+                <h1 class="auction-title">
+                    <span class="title-main">Auction</span>
+                    <span class="title-sub">Arena</span>
+                </h1>
             </div>
-            <div id="player-price">Price: Loading...</div>
-            <div id="buttons">
-                <button id="take-btn">Take</button>
-                <button id="leave-btn">Leave</button>
-                <button id="refresh-btn">Refresh</button>
+            <div class="auction-badge">
+                <div class="badge-icon">🔨</div>
+                <div class="badge-text">LIVE</div>
             </div>
+        </header>
+
+        <!-- User Stats Section -->
+        <div class="user-stats-panel">
+            <div class="stat-card wallet-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-content">
+                    <div class="stat-label">Wallet Balance</div>
+                    <div id="user-money" class="stat-value">Loading...</div>
+                </div>
+            </div>
+            <div class="stat-card team-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <div class="stat-label">Team Strength</div>
+                    <div id="user-players" class="stat-value">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Auction Stage -->
+        <div class="auction-stage">
+            
+            <!-- Player Showcase Card -->
+            <div class="player-showcase">
+                <div class="showcase-header">
+                    <div class="player-number">#01</div>
+                    <div class="auction-status">
+                        <span class="status-dot"></span>
+                        <span>On Auction</span>
+                    </div>
+                </div>
+
+                <div class="player-profile">
+                    <div class="player-avatar">
+                        <div class="avatar-ring"></div>
+                        <div class="avatar-image">
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="player-info">
+                        <h2 id="player-name" class="player-name">Loading...</h2>
+                        <div id="player-type" class="player-role">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon-small">🏏</div>
+                        <div class="stat-details">
+                            <div class="stat-label-small">Batting</div>
+                            <div id="player-batting" class="stat-value-small">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon-small">⚡</div>
+                        <div class="stat-details">
+                            <div class="stat-label-small">Bowling</div>
+                            <div id="player-bowling" class="stat-value-small">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skills & Weakness -->
+                <div class="skills-section">
+                    <div class="skill-block strengths">
+                        <div class="skill-header">
+                            <span class="skill-icon">💪</span>
+                            <span>Strengths</span>
+                        </div>
+                        <div id="player-skills" class="skill-content">Loading...</div>
+                    </div>
+                    <div class="skill-block weakness">
+                        <div class="skill-header">
+                            <span class="skill-icon">⚠️</span>
+                            <span>Weakness</span>
+                        </div>
+                        <div id="player-weakness" class="skill-content">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Bidding Info -->
+                <div class="bidding-info">
+                    <div class="current-bidder">
+                        <div class="bidder-label">Current Bidder</div>
+                        <div id="player-bidder" class="bidder-name">None</div>
+                    </div>
+                    <div class="current-price">
+                        <div class="price-label">Current Price</div>
+                        <div id="player-price" class="price-value">₹0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="player-navigation">
+                <button id="prev-btn" class="nav-btn prev-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                    <span>Previous</span>
+                </button>
+                <div class="player-indicator">
+                    <div class="indicator-dots">
+                        <span class="dot active"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                </div>
+                <button id="next-btn" class="nav-btn next-btn">
+                    <span>Next</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-panel">
+            <button id="take-btn" class="action-btn bid-btn">
+                <span class="btn-icon">🔨</span>
+                <span class="btn-text">
+                    <span class="btn-main">Place Bid</span>
+                    <span class="btn-sub">Increase by 10%</span>
+                </span>
+            </button>
+            <button id="leave-btn" class="action-btn pass-btn">
+                <span class="btn-icon">🚫</span>
+                <span class="btn-text">
+                    <span class="btn-main">Pass</span>
+                    <span class="btn-sub">Skip this player</span>
+                </span>
+            </button>
+            <button id="refresh-btn" class="action-btn refresh-btn">
+                <span class="btn-icon">🔄</span>
+                <span class="btn-text">
+                    <span class="btn-main">Refresh</span>
+                </span>
+            </button>
         </div>
     </div>
 
-    <!-- Firebase SDKs via script tags -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="bidding.js"></script>
