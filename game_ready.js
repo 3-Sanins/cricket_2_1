@@ -81,22 +81,22 @@ function init() {
     return;
   }
 
-  // TESTING - Set hardcoded values
+/*  // TESTING - Set hardcoded values
   tournamentName = "FPL";
   matchType = "league";
   user1 = "Akshit";
   user2 = "Arnav";
   homeTeam = Math.random() < 0.5 ? "Akshit" : "Arnav";
-
+*/
   // To use URL params instead (for production), comment above and uncomment below:
-  /*
+  
   const params = new URLSearchParams(window.location.search);
   tournamentName = params.get("tournamentname");
   matchType = params.get("matchtype") || "league";
   user1 = params.get("user1");
   user2 = params.get("user2");
   homeTeam = params.get("home");
-  */
+  
   if (!tournamentName || !user1 || !user2) {
     showPopup("Invalid match parameters");
     setTimeout(() => window.location.href = "/tournaments.html", 2000);
