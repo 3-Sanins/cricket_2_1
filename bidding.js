@@ -70,7 +70,7 @@ function fetchData() {
       currentPlayerIndex = 0;
       currentPlayerKey = newPlayerKeys[0];
       if (wasViewingPlayer) {
-        alertManager.show('navigation', 'Current player removed - showing first available player');
+        //alertManager.show('navigation', 'Current player removed - showing first available player');
       }
     } else {
       currentPlayerIndex = 0;
@@ -311,9 +311,7 @@ document.getElementById("take-btn").addEventListener("click", async () => {
     const currentMoney = parseFloat(freshUserData.money) || 0;
     const currentPrice = parseFloat(player.price) || 0;
     const newPrice = currentPrice * 1.1;
-    // Take button mein ye add kar debugging ke liye:
-const currentPrice = parseFloat(player.price) || 0;
-const newPrice = currentPrice * 1.1;
+    // Take button mein ye add kar d
 
 console.log("Current Price:", currentPrice);
 console.log("New Price:", newPrice);
@@ -380,7 +378,7 @@ document.getElementById("leave-btn").addEventListener("click", async () => {
     if (allUsersBidOne(users)) {
       await database.ref(`tournament/${currentTournament}/bidding_data/${key}`).remove();
       await resetAllUsersBidStatus();
-      alertManager.show('remove_success', "Player removed (everyone left)");
+      //alertManager.show('remove_success', "Player removed (everyone left)");
     }
   } catch (error) {
     console.error("Error in leave operation:", error);
