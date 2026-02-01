@@ -326,7 +326,7 @@ tRef.once("value").then(snapshot => {
       
       // Build URL parameters
       const params = new URLSearchParams({
-        tournamentname: tournamentName.toLowerCase(),
+        tournamentname: tournamentName,
         matchtype: nextMatch.type, // "league" or "knockout"
         user1: nextMatch.user1,
         user2: nextMatch.user2
