@@ -68,7 +68,7 @@ function init() {
     } else {
         // Production mode
         const params = new URLSearchParams(window.location.search);
-        tournamentName = params.get("tournamentname");
+        tournamentName = params.get("tournamentname").toUpperCase();
         matchType = params.get("matchtype") || "league";
         user1 = params.get("user1");
         user2 = params.get("user2");
@@ -167,75 +167,101 @@ function loadGameInfo(game) {
 }
 
 function loadUserPlayers() {
-    elements.loadingOverlay.classList.remove("hidden");
-    
-    // Get user's purchased players from bidding_data
-    const biddingRef = db.ref(`tournament/${tournamentName}/bidding_data`);
-    
-    biddingRef.once("value").then(snapshot => {
-        const biddingData = snapshot.val();
-        allPlayers = [];
-        
-        // Filter players purchased by current user
-        for (const playerId in biddingData) {
-            const player = biddingData[playerId];
-            if (player.bidder === playerName) {
-                player.id = playerId;
-                allPlayers.push(player);
-            }
-        }
-        
-        // Load existing selected team if any
-        loadSelectedTeam();
-        
-    }).catch(error => {
-        console.error("Error loading players:", error);
-        showWarning("Error loading players data");
+  elements.loadingOverlay.classList.remove("hidden");
+
+  const teamRef = db.ref(
+    `tournament/${tournamentName}/users/${playerName}/players`
+  );
+
+  teamRef.once("value")
+    .then(snapshot => {
+      const teamData = snapshot.val();
+      allPlayers = [];
+
+      if (!teamData) {
+        console.error("❌ team empty");
         elements.loadingOverlay.classList.add("hidden");
+        return;
+      }
+
+      for (const playerId in teamData) {
+        const player = teamData[playerId];
+        player.id = playerId;
+        allPlayers.push(player);
+      }
+
+      console.log("✅ Players loaded from team:", allPlayers.length);
+
+      loadSelectedTeam();
+    })
+    .catch(err => {
+      console.error(err);
+      elements.loadingOverlay.classList.add("hidden");
     });
 }
 
 function loadSelectedTeam() {
-    const selectedTeamRef = db.ref(`tournament/${tournamentName}/selected_team/${playerName}`);
-    
-    selectedTeamRef.once("value").then(snapshot => {
-        if (snapshot.exists()) {
-            const selectedTeam = snapshot.val();
-            
-            // Load selected players
-            if (selectedTeam.players) {
-                for (const playerId in selectedTeam.players) {
-                    selectedPlayers.add(playerId);
-                }
-            }
-            
-            // Load captain
-            if (selectedTeam.captain) {
-                captainId = selectedTeam.captain;
-                const captain = allPlayers.find(p => p.id === captainId);
-                if (captain) {
-                    elements.captainName.textContent = captain.name;
-                }
-            }
+  const userSelectedRef = db.ref(
+    `tournament/${tournamentName}/users/${playerName}/selected_team`
+  );
+
+  selectedPlayers.clear();
+  captainId = null;
+
+  userSelectedRef.once("value")
+    .then(snapshot => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+
+        // restore players
+        if (data.players) {
+          Object.keys(data.players).forEach(pid => {
+            selectedPlayers.add(pid);
+          });
         }
-        
-        // Render players table
-        filteredPlayers = [...allPlayers];
-        renderPlayersTable();
-        renderSelectedPlayersList();
-        updateSelectionCounter();
-        updateSubmitButton();
-        elements.loadingOverlay.classList.add("hidden");
-        
-    }).catch(error => {
-        console.error("Error loading selected team:", error);
-        elements.loadingOverlay.classList.add("hidden");
+
+        // restore captain
+        if (data.captain) {
+          captainId = data.captain;
+          elements.captainName.textContent = captainId;
+        }
+
+        // 🔥 COPY TO GAME PLAYING11
+        db.ref(
+          `tournament/${tournamentName}/game/${playerName}/playing11`
+        ).set(data);
+      }
+
+      filteredPlayers = [...allPlayers];
+
+      renderPlayersTable();
+      renderSelectedPlayersList();
+      updateSelectionCounter();
+      updateSubmitButton();
+
+      elements.loadingOverlay.classList.add("hidden");
+    })
+    .catch(err => {
+      console.error(err);
+      elements.loadingOverlay.classList.add("hidden");
     });
 }
 
+
 function renderPlayersTable() {
-    elements.playersTableBody.innerHTML = "";
-    
+  elements.playersTableBody.innerHTML = "";
+
+  if (!filteredPlayers || filteredPlayers.length === 0) {
+    elements.playersTableBody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;color:#aaa">
+          No players available
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
     filteredPlayers.forEach(player => {
         const isSelected = selectedPlayers.has(player.id);
         const isCaptain = (player.id === captainId);
@@ -506,86 +532,53 @@ function filterPlayers() {
 }
 
 async function submitTeam() {
-    if (selectedPlayers.size !== 11) {
-        showWarning("Please select exactly 11 players");
-        return;
+  if (selectedPlayers.size !== 11) {
+    showWarning("Select exactly 11 players");
+    return;
+  }
+
+  if (!captainId) {
+    showWarning("Select a captain");
+    return;
+  }
+
+  const playersObj = {};
+
+  selectedPlayers.forEach(pid => {
+    const p = allPlayers.find(x => x.id === pid);
+    if (p) {
+      const copy = { ...p };
+      delete copy.id;
+      playersObj[pid] = copy;
     }
-    
-    if (!captainId) {
-        showWarning("Please select a captain");
-        return;
-    }
-    
-    // Build selected team object
-    const selectedTeam = {
-        players: {},
-        captain: captainId,
-        submitted: true,
-        timestamp: new Date().toISOString()
-    };
-    
-    // Add selected players data
-    selectedPlayers.forEach(playerId => {
-        const player = allPlayers.find(p => p.id === playerId);
-        if (player) {
-            selectedTeam.players[playerId] = player;
-        }
-    });
-    
-    // Check game status before submitting
-    const gameRef = db.ref(`tournament/${tournamentName}/game`);
-    const gameSnap = await gameRef.once("value");
-    const game = gameSnap.val();
-    
-    if (!game) {
-        showWarning("Match not found");
-        return;
-    }
-    
-    let newStatus;
-    
-    if (game.status === "start") {
-        // First user to submit
-        newStatus = `play1${playerName}`;
-    } else if (game.status.startsWith("play1")) {
-        const opponentName = game.status.replace("play1", "");
-        
-        if (opponentName === playerName) {
-            // Same user submitting again (maybe duplicate click)
-            // Just redirect without changing status
-            redirectToMaingame();
-            return;
-        } else {
-            // Second user submitting
-            newStatus = "play";
-        }
-    } else if (game.status === "play") {
-        // Match already started
-        redirectToMaingame();
-        return;
-    } else {
-        showWarning("Invalid match status");
-        return;
-    }
-    
-    // Save selected team to Firebase
-    const selectedTeamRef = db.ref(`tournament/${tournamentName}/selected_team/${playerName}`);
-    
-    try {
-        // Update both game status and selected team in a batch
-        await Promise.all([
-            selectedTeamRef.set(selectedTeam),
-            gameRef.update({ status: newStatus })
-        ]);
-        
-        // Redirect to maingame.html
-        redirectToMaingame();
-        
-    } catch (error) {
-        console.error("Error submitting team:", error);
-        showWarning("Error submitting team. Please try again.");
-    }
+  });
+
+  const selectedTeamData = {
+    captain: captainId,
+    players: playersObj
+  };
+
+  const userSelectedRef = db.ref(
+    `tournament/${tournamentName}/users/${playerName}/selected_team`
+  );
+
+  const gamePlayingRef = db.ref(
+    `tournament/${tournamentName}/game/${playerName}/playing11`
+  );
+
+  try {
+    await Promise.all([
+      userSelectedRef.set(selectedTeamData),
+      gamePlayingRef.set(selectedTeamData)
+    ]);
+
+    redirectToMaingame();
+  } catch (err) {
+    console.error(err);
+    showWarning("Failed to submit team");
+  }
 }
+
 
 function redirectToMaingame() {
     const params = new URLSearchParams(window.location.search);
