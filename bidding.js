@@ -201,55 +201,86 @@ function generateUniquePlayerKey(teamPlayers, baseName) {
 }
 
 async function transferPlayerToTeam(player, key, receivingUser) {
-  const playerPrice = parseFloat(player.price) || 0;
-  const tempTransferId = `temp_${Date.now()}_${Math.random()}`;
+  console.log("=== START transferPlayerToTeam ===");
+  console.log("Player:", player);
+  console.log("Key:", key);
+  console.log("Receiving User:", receivingUser);
   
-  const transferLockRef = database.ref(
-    `tournament/${currentTournament}/transfer_locks/${tempTransferId}`
-  );
-  const userRef = database.ref(`tournament/${currentTournament}/users/${receivingUser}`);
-  const teamRef = database.ref(`tournament/${currentTournament}/users/${receivingUser}/players`);
-  const bidRef = database.ref(`tournament/${currentTournament}/bidding_data/${key}`);
+  const playerPrice = parseFloat(player.price) || 0;
+  console.log("Player Price:", playerPrice);
 
   try {
-    await transferLockRef.set({ player: player.name, user: receivingUser, timestamp: Date.now() });
-
+    console.log("Step 1: Fetching user data (skipping transfer lock)");
+    const userRef = database.ref(`tournament/${currentTournament}/users/${receivingUser}`);
     const userSnapshot = await userRef.once("value");
     const currentUserData = userSnapshot.val() || {};
+    console.log("User Data:", currentUserData);
+    
     const currentMoney = parseFloat(currentUserData.money) || 0;
+    console.log("Current Money:", currentMoney);
 
     if (currentMoney < playerPrice) {
-      await transferLockRef.remove();
-      throw new Error("Insufficient funds");
+      const errorMsg = `Insufficient funds. Need ₹${playerPrice}, have ₹${currentMoney}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
+    console.log("Step 2: Generating unique key");
+    const teamRef = database.ref(`tournament/${currentTournament}/users/${receivingUser}/players`);
     const teamSnapshot = await teamRef.once("value");
     const team = teamSnapshot.val() || {};
+    
     const uniqueKey = generateUniquePlayerKey(team, player.name);
+    console.log("Unique Key:", uniqueKey);
 
-    const teamPlayerData = {
-      ...player,
-      originalName: player.name,
-      matches: 0,
-      runs: 0,
-      wickets: 0
-    };
-
-    await database.ref(`tournament/${currentTournament}/users/${receivingUser}`).update({
-      [`players/${uniqueKey}`]: teamPlayerData,
+    console.log("Step 3: Preparing updates");
+    const updates = {
+      [`players/${uniqueKey}`]: {
+        ...player,
+        originalName: player.name,
+        matches: 0,
+        runs: 0,
+        wickets: 0
+      },
       money: currentMoney - playerPrice,
       bid: 0
-    });
+    };
+    console.log("Updates:", updates);
 
+    console.log("Step 4: Applying updates to user");
+    await userRef.update(updates);
+    console.log("User updated successfully");
+
+    console.log("Step 5: Removing player from bidding");
+    const bidRef = database.ref(`tournament/${currentTournament}/bidding_data/${key}`);
     await bidRef.remove();
-    await transferLockRef.remove();
-    await resetAllUsersBidStatus();
+    console.log("Player removed from bidding");
 
-    alertManager.show('transfer_success', `Player transferred to ${receivingUser === currentUser ? 'you' : receivingUser}`);
+    console.log("Step 6: Resetting all users bid status");
+    await resetAllUsersBidStatus();
+    console.log("Bid status reset");
+
+    /*alertManager.show('transfer_success', 
+      `${player.name} successfully transferred to ${receivingUser === currentUser ? 'your team' : receivingUser} for ₹${playerPrice}`
+    );*/
+    
+    console.log("=== TRANSFER COMPLETED ===");
+    return true;
+    
   } catch (error) {
-    await transferLockRef.remove().catch(() => {});
-    console.error("Transfer error:", error);
-    alertManager.show('transfer_error', error.message || "Transfer failed. Please try again.");
+    console.error("=== TRANSFER ERROR ===");
+    console.error("Full error:", error);
+    console.error("Message:", error.message);
+    
+    // Specific error messages
+    if (error.message.includes("permission_denied")) {
+      alertManager.show('permission_error', "Database permission denied. Check Firebase rules.");
+    } else if (error.message.includes("database/")) {
+      alertManager.show('db_error', `Database error: ${error.message}`);
+    } else {
+      alertManager.show('transfer_error', error.message || "Transfer failed");
+    }
+    
     throw error;
   }
 }
