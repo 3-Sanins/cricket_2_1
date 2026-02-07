@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Main Game</title>
+  <link rel="stylesheet" href="maingame.css" />
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div>
+        <h1 id="tournamentTitle">TOURNAMENT</h1>
+        <p id="matchInfo">Match</p>
+      </div>
+      <div class="badge" id="roleBadge">ROLE</div>
+    </header>
+
+    <section class="scorecard">
+      <div class="score-main">
+        <h2 id="battingTeam">Batting Team</h2>
+        <div class="score-line">
+          <span id="totalRuns">0</span>/<span id="totalWickets">0</span>
+          <span class="overs">(<span id="overs">0.0</span>)</span>
+        </div>
+        <div class="sub-line">
+          <span>RR: <span id="runRate">0.00</span></span>
+          <span id="chaseInfo" class="hidden">RRR: <span id="reqRunRate">0.00</span></span>
+        </div>
+      </div>
+      <div class="score-secondary">
+        <div class="info-pill">Inning: <span id="inningValue">-</span></div>
+        <div class="info-pill">Target: <span id="targetValue">-</span></div>
+      </div>
+    </section>
+
+    <section class="players-section">
+      <div class="card">
+        <h3>Batsmen</h3>
+        <div id="batsmenList" class="player-list"></div>
+      </div>
+      <div class="card">
+        <h3>Current Bowler</h3>
+        <div id="bowlerInfo" class="player-info">Select a bowler</div>
+        <button id="selectBowlerBtn" class="btn hidden">Select Bowler</button>
+        <div class="over-log" id="overLog"></div>
+      </div>
+    </section>
+
+    <section class="action-section">
+      <div class="card">
+        <h3>Batting Controls</h3>
+        <div class="button-row">
+          <button class="btn mood-btn" data-mood="def">Defence</button>
+          <button class="btn mood-btn" data-mood="strike">Strike</button>
+          <button class="btn mood-btn" data-mood="stroke">Stroke</button>
+        </div>
+        <p class="hint" id="battingHint">Waiting for bowler selection...</p>
+      </div>
+      <div class="card">
+        <h3>Match Updates</h3>
+        <div id="matchUpdates" class="updates"></div>
+      </div>
+    </section>
+
+    <section id="resultSection" class="result-section hidden">
+      <h2 id="resultTitle">Result</h2>
+      <div class="scoreboard">
+        <div class="scoreboard-team">
+          <h3 id="resultTeam1">Team 1</h3>
+          <div id="scoreboard1" class="scoreboard-table"></div>
+        </div>
+        <div class="scoreboard-team">
+          <h3 id="resultTeam2">Team 2</h3>
+          <div id="scoreboard2" class="scoreboard-table"></div>
+        </div>
+      </div>
+      <button id="resultOkBtn" class="btn">OKAY</button>
+    </section>
+  </div>
+
+  <div id="selectionModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="selectionTitle">Select Player</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Select</th>
+              <th>Name</th>
+              <th id="selectionRatingHeader">Rating</th>
+              <th>Strength</th>
+              <th>Weakness</th>
+            </tr>
+          </thead>
+          <tbody id="selectionTableBody"></tbody>
+        </table>
+      </div>
+      <div class="modal-actions">
+        <button id="selectionSubmit" class="btn">Play</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="messageToast" class="toast hidden"></div>
+
+  <script src="maingame.js"></script>
+</body>
+</html>
