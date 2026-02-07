@@ -341,13 +341,22 @@ function renderOverLog(log) {
 function updateControls(battingUser, bowlingUser, bowlingData) {
   const isBatting = playerName === battingUser;
   const hasBowler = !!(bowlingData && bowlingData.bowler && bowlingData.bowler.id);
+  const battingData = gameState?.[battingUser] || {};
+  const batsmenReady = battingData.batting && Object.keys(battingData.batting).length >= 2;
+  const controlsReady = isBatting && hasBowler && batsmenReady;
 
   moodButtons.forEach(btn => {
-    btn.disabled = !isBatting || !hasBowler;
+    btn.disabled = !controlsReady;
   });
 
   elements.selectBowlerBtn.classList.toggle("hidden", playerName !== bowlingUser);
-  elements.battingHint.textContent = !hasBowler ? "Waiting for bowler selection..." : "Choose your shot";
+  if (!hasBowler) {
+    elements.battingHint.textContent = "Waiting for bowler selection...";
+  } else if (!batsmenReady) {
+    elements.battingHint.textContent = "Select two batsmen to start.";
+  } else {
+    elements.battingHint.textContent = "Choose your shot";
+  }
 }
 
 function maybePromptBatsmenSelection(battingUser, battingData) {
@@ -455,16 +464,25 @@ function addBatsman(playerId, player) {
     const isFirstBatsman = result.snapshot.val() === 0 && Object.keys(currentBatting).length === 0;
     const strike = isFirstBatsman || !hasStriker;
 
-    battingRef.child(playerId).set({
-      ...player,
-      strike,
-      ball_faced: player.ball_faced || 0,
-      runs_made: player.runs_made || 0,
-      four: player.four || 0,
-      six: player.six || 0,
-      out: -1,
-      inning: player.inning || 0
-    }).then(() => {
+    const updates = {
+      [`${playerName}/batting/${playerId}`]: {
+        ...player,
+        strike,
+        ball_faced: player.ball_faced || 0,
+        runs_made: player.runs_made || 0,
+        four: player.four || 0,
+        six: player.six || 0,
+        out: -1,
+        inning: player.inning || 0
+      }
+    };
+
+    const currentWicket = gameState?.[playerName]?.wicket;
+    if (isFirstBatsman && currentWicket === -1) {
+      updates[`${playerName}/wicket`] = 0;
+    }
+
+    gameRef.update(updates).then(() => {
       return gameRef.once("value");
     }).then(snapshot => {
       gameState = snapshot.val();
@@ -484,6 +502,11 @@ function setBowler(playerId, player) {
     ball_thrown: player.ball_thrown || 0,
     runs_faced: player.runs_faced || 0,
     wicket_taken: player.wicket_taken || 0
+  }).then(() => {
+    return gameRef.once("value");
+  }).then(snapshot => {
+    gameState = snapshot.val();
+    renderGame();
   });
 }
 
