@@ -36,7 +36,8 @@ tRef.once("value").then(snapshot => {
 
   const status = data.status.toLowerCase();
   const creator = data.creator;
-  const seasonNo = status.match(/\d+/)[0];
+  const seasonMatch = status.match(/\d+/);
+  const seasonNo = seasonMatch ? seasonMatch[0] : "1";
 
   /* WAITING */
   if (status.startsWith("waiting")) {

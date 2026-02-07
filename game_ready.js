@@ -91,7 +91,8 @@ function init() {
   // To use URL params instead (for production), comment above and uncomment below:
   
   const params = new URLSearchParams(window.location.search);
-  tournamentName = params.get("tournamentname").toUpperCase();
+  const tournamentParam = params.get("tournamentname");
+  tournamentName = tournamentParam ? tournamentParam.toUpperCase() : "";
   matchType = params.get("matchtype") || "league";
   user1 = params.get("user1");
   user2 = params.get("user2");
