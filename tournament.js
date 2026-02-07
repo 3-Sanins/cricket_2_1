@@ -125,7 +125,8 @@ function submitModal() {
 
 /* Logic */
 function joinTournament(name, pass) {
-    const ref = db.ref("tournament/" + name);
+    const normalizedName = name.toUpperCase();
+    const ref = db.ref("tournament/" + normalizedName);
 
     ref.once("value").then(snap => {
         if (!snap.exists()) {
