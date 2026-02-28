@@ -80,6 +80,14 @@ function fetchData() {
     playerKeys = newPlayerKeys;
     players = newPlayers;
 
+    // Reset price to 1 for players with price > 10000
+    newPlayerKeys.forEach(k => {
+      const p = obj[k];
+      if ((parseFloat(p.price) || 0) > 10000) {
+        database.ref(`tournament/${currentTournament}/bidding_data/${k}/price`).set(1);
+      }
+    });
+
     displayPlayer();
     updateButtonStates();
   }, error => {
@@ -125,11 +133,9 @@ function displayPlayer() {
   const player = players[currentPlayerIndex];
   document.getElementById("player-name").textContent = player.name || "Unknown";
   
-  // Extract just the type value without "Type: " prefix
   const typeText = player.type || "N/A";
   document.getElementById("player-type").textContent = typeText;
   
-  // Extract just the rating values
   document.getElementById("player-batting").textContent = player.battingRating || "N/A";
   document.getElementById("player-bowling").textContent = player.bowlingRating || "N/A";
   
@@ -260,10 +266,6 @@ async function transferPlayerToTeam(player, key, receivingUser) {
     await resetAllUsersBidStatus();
     console.log("Bid status reset");
 
-    /*alertManager.show('transfer_success', 
-      `${player.name} successfully transferred to ${receivingUser === currentUser ? 'your team' : receivingUser} for ₹${playerPrice}`
-    );*/
-    
     console.log("=== TRANSFER COMPLETED ===");
     return true;
     
@@ -272,7 +274,6 @@ async function transferPlayerToTeam(player, key, receivingUser) {
     console.error("Full error:", error);
     console.error("Message:", error.message);
     
-    // Specific error messages
     if (error.message.includes("permission_denied")) {
       alertManager.show('permission_error', "Database permission denied. Check Firebase rules.");
     } else if (error.message.includes("database/")) {
@@ -310,13 +311,14 @@ document.getElementById("take-btn").addEventListener("click", async () => {
     const freshUserData = userSnapshot.val() || {};
     const currentMoney = parseFloat(freshUserData.money) || 0;
     const currentPrice = parseFloat(player.price) || 0;
-    const newPrice = currentPrice * 1.1;
-    // Take button mein ye add kar d
 
-console.log("Current Price:", currentPrice);
-console.log("New Price:", newPrice);
-console.log("Player:", player);
-console.log("Key:", key);
+    // +1 increment system
+    const newPrice = currentPrice + 1;
+
+    console.log("Current Price:", currentPrice);
+    console.log("New Price:", newPrice);
+    console.log("Player:", player);
+    console.log("Key:", key);
 
     if (newPrice > currentMoney) {
       alertManager.show('funds_error', "Insufficient funds");
@@ -378,7 +380,6 @@ document.getElementById("leave-btn").addEventListener("click", async () => {
     if (allUsersBidOne(users)) {
       await database.ref(`tournament/${currentTournament}/bidding_data/${key}`).remove();
       await resetAllUsersBidStatus();
-      //alertManager.show('remove_success', "Player removed (everyone left)");
     }
   } catch (error) {
     console.error("Error in leave operation:", error);
