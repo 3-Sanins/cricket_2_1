@@ -270,10 +270,11 @@ window.addEventListener("load", () => {
 function savePlayerName(){
     const name = document.getElementById("playerNameInput").value.trim();
     if(!name) return;
-    localStorage.setItem("playerName", name);
+    localStorage.setItem("playerName", name.toLowerCase());
     document.getElementById("namePopup").style.display = "none";
 }
 </script>
 
 </body>
 </html>
+
